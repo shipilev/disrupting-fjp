@@ -1,4 +1,6 @@
-Uses JMH to build and run. Use JDK 8 GA for best results.
+(Implicitly uses JMH)
+
+Use JDK 8 GA to build and run.
 
 Build:
  $ mvn clean install
