@@ -8,6 +8,7 @@ import com.lmax.disruptor.dsl.ProducerType;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.GenerateMicroBenchmark;
+import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
@@ -90,7 +91,7 @@ public class Disruptor {
         }
     }
 
-    @Setup
+    @Setup(Level.Iteration)
     public void setup() {
         PiEventFac fac = new PiEventFac();
         executor = Executors.newCachedThreadPool();
@@ -108,7 +109,7 @@ public class Disruptor {
         ringBuffer = disruptor.getRingBuffer();
     }
 
-    @TearDown
+    @TearDown(Level.Iteration)
     public void tearDown() {
         disruptor.shutdown();
         executor.shutdownNow();
