@@ -1,0 +1,7 @@
+Uses JMH to build and run. Use JDK 8 GA for best results.
+
+Build:
+ $ mvn clean install
+
+Run:
+ $ java -jar target/microbenchmarks.jar
