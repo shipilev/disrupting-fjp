@@ -29,7 +29,7 @@ public class ForkJoinReuse {
      */
 
     static class PiForkJoinTask extends RecursiveTask<Double> {
-        private volatile int slice;
+        private int slice;
 
         @Override
         protected Double compute() {
@@ -53,8 +53,8 @@ public class ForkJoinReuse {
         }
 
         double acc = 0D;
-        int s = 0;
-        while (s < Shared.SLICES - preWork) {
+        int s = preWork;
+        while (s < Shared.SLICES) {
             for (PiForkJoinTask task : tasks) {
                 task.slice = s;
                 acc += task.join();
