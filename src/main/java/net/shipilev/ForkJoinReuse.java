@@ -7,11 +7,13 @@ import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
 import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.TimeUnit;
 
@@ -41,8 +43,8 @@ public class ForkJoinReuse {
     public double run() throws InterruptedException {
         List<PiForkJoinTask> tasks = new ArrayList<>();
 
-        int preWork = Shared.THREADS * 100;
-        for (int i = 0; i < preWork; i++) {
+        int stride = Shared.THREADS * 100;
+        for (int i = 0; i < stride; i++) {
             PiForkJoinTask task = new PiForkJoinTask();
             task.slice = i;
             tasks.add(task);
@@ -53,7 +55,7 @@ public class ForkJoinReuse {
         }
 
         double acc = 0D;
-        int s = preWork;
+        int s = stride;
         while (s < Shared.SLICES) {
             for (PiForkJoinTask task : tasks) {
                 task.slice = s;
@@ -61,7 +63,7 @@ public class ForkJoinReuse {
                 task.reinitialize();
                 task.fork();
             }
-            s += tasks.size();
+            s += stride;
         }
 
         for (PiForkJoinTask task : tasks) {
