@@ -1,0 +1,74 @@
+package net.shipilev;
+
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.GenerateMicroBenchmark;
+import org.openjdk.jmh.annotations.Measurement;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.Warmup;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.RecursiveTask;
+import java.util.concurrent.TimeUnit;
+
+@State(Scope.Benchmark)
+@Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
+@Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
+@Fork(5)
+@BenchmarkMode(Mode.AverageTime)
+@OutputTimeUnit(TimeUnit.MILLISECONDS)
+public class ForkJoinReuse {
+
+     /*
+      The fork-join task below is used as "just" the Callable,
+      and "reuses" the submitted tasks.
+     */
+
+    static class PiForkJoinTask extends RecursiveTask<Double> {
+        private volatile int slice;
+
+        @Override
+        protected Double compute() {
+            return Shared.calculatePi(slice);
+        }
+    }
+
+    @GenerateMicroBenchmark
+    public double run() throws InterruptedException {
+        List<PiForkJoinTask> tasks = new ArrayList<>();
+
+        int preWork = Shared.THREADS * 100;
+        for (int i = 0; i < preWork; i++) {
+            PiForkJoinTask task = new PiForkJoinTask();
+            task.slice = i;
+            tasks.add(task);
+        }
+
+        for (PiForkJoinTask task : tasks) {
+            task.fork();
+        }
+
+        double acc = 0D;
+        int s = 0;
+        while (s < Shared.SLICES - preWork) {
+            for (PiForkJoinTask task : tasks) {
+                task.slice = s;
+                acc += task.join();
+                task.reinitialize();
+                task.fork();
+            }
+            s += tasks.size();
+        }
+
+        for (PiForkJoinTask task : tasks) {
+            acc += task.join();
+        }
+
+        return acc;
+    }
+
+}
