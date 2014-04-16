@@ -58,9 +58,9 @@ public class ForkJoinReuse {
         int s = stride;
         while (s < Shared.SLICES) {
             for (PiForkJoinTask task : tasks) {
-                task.slice = s;
                 acc += task.join();
                 task.reinitialize();
+                task.slice = s;
                 task.fork();
             }
             s += stride;
