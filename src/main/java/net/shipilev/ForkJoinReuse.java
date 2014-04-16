@@ -47,11 +47,8 @@ public class ForkJoinReuse {
         for (int i = 0; i < stride; i++) {
             PiForkJoinTask task = new PiForkJoinTask();
             task.slice = i;
-            tasks.add(task);
-        }
-
-        for (PiForkJoinTask task : tasks) {
             task.fork();
+            tasks.add(task);
         }
 
         double acc = 0D;
