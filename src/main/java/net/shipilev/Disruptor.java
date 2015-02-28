@@ -7,7 +7,7 @@ import com.lmax.disruptor.SleepingWaitStrategy;
 import com.lmax.disruptor.dsl.ProducerType;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
-import org.openjdk.jmh.annotations.GenerateMicroBenchmark;
+import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
@@ -24,17 +24,17 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @State(Scope.Benchmark)
-@Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
-@Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
-@Fork(5)
+@Warmup(iterations = 3, time = 1, timeUnit = TimeUnit.MILLISECONDS)
+@Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.MILLISECONDS)
+@Fork(1)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 public class Disruptor {
 
-    private com.lmax.disruptor.dsl.Disruptor<PiJob> disruptor;
     private ExecutorService executor;
-    private PiResultReclaimer res;
+    private com.lmax.disruptor.dsl.Disruptor<PiJob> disruptor;
     private RingBuffer<PiJob> ringBuffer;
+    private PiResultReclaimer result;
 
     public static class PiJob {
         public double result;
@@ -55,14 +55,14 @@ public class Disruptor {
     }
 
     public static class PiEventProcessor implements EventHandler<PiJob> {
-        private int partionId;
+        private final int partionId;
 
-        public PiEventProcessor(int partionId) {
+        public PiEventProcessor(final int partionId) {
             this.partionId = partionId;
         }
 
         @Override
-        public void onEvent(PiJob event, long sequence, boolean isEndOfBatch) throws Exception {
+        public void onEvent(final PiJob event, final long sequence, final boolean isEndOfBatch) throws Exception {
             if (partionId == event.partitionId) {
                 event.calculatePi();
             }
@@ -70,41 +70,41 @@ public class Disruptor {
     }
 
     public static class PiResultReclaimer implements EventHandler<PiJob> {
-        double result;
-        long seq;
-        final int numSlice;
-        final CountDownLatch latch;
+        private double result;
+        private long seq;
+        private final int numSlice;
+        private final CountDownLatch latch;
 
-        public PiResultReclaimer(int numSlice) {
+        public PiResultReclaimer(final int numSlice) {
             this.numSlice = numSlice;
             latch = new CountDownLatch(1);
         }
 
         @Override
-        public void onEvent(PiJob event, long sequence, boolean isEndOfBatch) throws Exception {
+        public void onEvent(final PiJob event, final long sequence, final boolean isEndOfBatch) throws Exception {
             result += event.result;
-            ++seq;
-
-            if (seq >= numSlice) {
+            if (++seq >= numSlice) {
                 latch.countDown();
             }
+        }
+
+        public double get() throws InterruptedException {
+            latch.await();
+            return result;
         }
     }
 
     @Setup(Level.Iteration)
     public void setup() {
-        PiEventFac fac = new PiEventFac();
         executor = Executors.newCachedThreadPool();
-        disruptor = new com.lmax.disruptor.dsl.Disruptor<PiJob>(fac, 16384, executor, ProducerType.SINGLE, new SleepingWaitStrategy());
-        PiEventProcessor procs[] = new PiEventProcessor[Shared.THREADS];
-        res = new PiResultReclaimer(Shared.SLICES);
-
+        disruptor = new com.lmax.disruptor.dsl.Disruptor<>(new PiEventFac(), Integer.highestOneBit(Shared.SLICES),
+                executor, ProducerType.SINGLE, new SleepingWaitStrategy());
+        final PiEventProcessor procs[] = new PiEventProcessor[Shared.THREADS];
+        result = new PiResultReclaimer(Shared.SLICES);
         for (int i = 0; i < procs.length; i++) {
             procs[i] = new PiEventProcessor(i);
         }
-
-        disruptor.handleEventsWith(procs).then(res);
-
+        disruptor.handleEventsWith(procs).then(result);
         disruptor.start();
         ringBuffer = disruptor.getRingBuffer();
     }
@@ -115,7 +115,7 @@ public class Disruptor {
         executor.shutdownNow();
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public double run() throws InterruptedException {
         int partitionId = 0;
         for (int i = 0; i < Shared.SLICES; i++) {
@@ -125,12 +125,9 @@ public class Disruptor {
             piJob.result = 0;
             piJob.partitionId = partitionId;
             ringBuffer.publish(seq);
-
             partitionId = (partitionId == (Shared.THREADS - 1)) ? 0 : partitionId + 1;
         }
-
-        res.latch.await();
-        return res.result;
+        return result.get();
     }
 
 }
