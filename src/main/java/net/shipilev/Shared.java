@@ -6,10 +6,13 @@ public class Shared {
     public static final int ITERS = 100;
     public static final int THREADS = Runtime.getRuntime().availableProcessors();
 
-    public static double calculatePi(int sliceNr) {
-        double acc = 0.0;
-        for (int i = sliceNr * ITERS; i <= ((sliceNr + 1) * ITERS - 1); i++) {
-            acc += 4.0 * (1 - (i % 2) * 2) / (2 * i + 1);
+    public static double calculatePi(final int sliceNr) {
+        final int from = sliceNr * ITERS;
+        final int to = from + ITERS;
+        final int c = (to << 1) + 1;
+        double acc = 0;
+        for (int a = 4 - ((from & 1) << 3), b = (from << 1) + 1; b < c; a = -a, b += 2) {
+            acc += ((double) a) / b;
         }
         return acc;
     }

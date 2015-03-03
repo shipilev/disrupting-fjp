@@ -22,41 +22,34 @@ Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
 or visit www.oracle.com if you need additional information or have any
 questions.
 -->
-
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>net.shipilev</groupId>
     <artifactId>disrupting-fjp</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
-
-    <name>Auto-generated JMH benchmark</name>
-
     <dependencies>
         <dependency>
             <groupId>org.openjdk.jmh</groupId>
             <artifactId>jmh-core</artifactId>
-            <version>0.5.6</version>
+            <version>1.6.1</version>
         </dependency>
         <dependency>
             <groupId>org.openjdk.jmh</groupId>
             <artifactId>jmh-generator-annprocess</artifactId>
-            <version>0.5.6</version>
+            <version>1.6.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.lmax</groupId>
             <artifactId>disruptor</artifactId>
-            <version>3.2.0</version>
+            <version>3.3.2</version>
         </dependency>
     </dependencies>
-
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
     <build>
         <plugins>
             <plugin>
@@ -90,8 +83,6 @@ questions.
                     </execution>
                 </executions>
             </plugin>
-
         </plugins>
     </build>
-
 </project>

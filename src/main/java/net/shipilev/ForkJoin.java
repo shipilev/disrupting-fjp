@@ -2,7 +2,7 @@ package net.shipilev;
 
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
-import org.openjdk.jmh.annotations.GenerateMicroBenchmark;
+import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
@@ -16,10 +16,10 @@ import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.TimeUnit;
 
 @State(Scope.Benchmark)
-@Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
-@Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
-@Fork(5)
-@BenchmarkMode(Mode.AverageTime)
+@Warmup(iterations = 3)
+@Measurement(iterations = 10)
+@Fork(1)
+@BenchmarkMode(Mode.SingleShotTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 public class ForkJoin {
 
@@ -28,36 +28,37 @@ public class ForkJoin {
      */
 
     static class PiForkJoinTask extends RecursiveTask<Double> {
-        private final int slices;
+        private final int from;
+        private final int to;
 
-        public PiForkJoinTask(int slices) {
-            this.slices = slices;
+        public PiForkJoinTask(final int from, final int to) {
+            this.from = from;
+            this.to = to;
         }
 
         @Override
         protected Double compute() {
-            double acc = 0D;
-            for (int s = 0; s < slices; s++) {
+            double acc = 0;
+            for (int s = from; s < to; s++) {
                 acc += Shared.calculatePi(s);
             }
             return acc;
         }
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public double run() throws InterruptedException {
-        List<PiForkJoinTask> tasks = new ArrayList<PiForkJoinTask>();
+        final List<PiForkJoinTask> tasks = new ArrayList<PiForkJoinTask>();
+        final int slicePerThread = Shared.SLICES / Shared.THREADS;
         for (int i = 0; i < Shared.THREADS; i++) {
-            PiForkJoinTask task = new PiForkJoinTask(Shared.SLICES / Shared.THREADS);
+            PiForkJoinTask task = new PiForkJoinTask(i * slicePerThread, (i + 1) * slicePerThread);
             task.fork();
             tasks.add(task);
         }
-
-        double acc = 0D;
+        double acc = 0;
         for (PiForkJoinTask task : tasks) {
             acc += task.join();
         }
-
         return acc;
     }
 

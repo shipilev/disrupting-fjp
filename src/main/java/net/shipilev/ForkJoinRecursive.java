@@ -2,7 +2,7 @@ package net.shipilev;
 
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
-import org.openjdk.jmh.annotations.GenerateMicroBenchmark;
+import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
@@ -15,10 +15,10 @@ import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.TimeUnit;
 
 @State(Scope.Benchmark)
-@Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
-@Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
-@Fork(5)
-@BenchmarkMode(Mode.AverageTime)
+@Warmup(iterations = 3)
+@Measurement(iterations = 10)
+@Fork(1)
+@BenchmarkMode(Mode.SingleShotTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 public class ForkJoinRecursive {
 
@@ -28,36 +28,35 @@ public class ForkJoinRecursive {
      */
 
     static class PiForkJoinTask extends RecursiveTask<Double> {
-        private final int slices;
+        private final int from;
+        private final int to;
 
-        public PiForkJoinTask(int slices) {
-            this.slices = slices;
+        public PiForkJoinTask(final int from, final int to) {
+            this.from = from;
+            this.to = to;
         }
 
         @Override
         protected Double compute() {
+            final int slices = to - from;
             if (slices < 10000) {
-                double acc = 0D;
-                for (int s = 0; s < slices; s++) {
+                double acc = 0;
+                for (int s = from; s < to; s++) {
                     acc += Shared.calculatePi(s);
                 }
                 return acc;
             }
-
-            int lslices = slices / 2;
-            int rslices = slices - lslices;
-            PiForkJoinTask t1 = new PiForkJoinTask(lslices);
-            PiForkJoinTask t2 = new PiForkJoinTask(rslices);
-
+            final int mid = from + slices / 2;
+            PiForkJoinTask t1 = new PiForkJoinTask(from, mid);
+            PiForkJoinTask t2 = new PiForkJoinTask(mid, to);
             ForkJoinTask.invokeAll(t1, t2);
-
             return t1.join() + t2.join();
         }
     }
 
-    @GenerateMicroBenchmark
+    @Benchmark
     public double run() throws InterruptedException {
-        return new PiForkJoinTask(Shared.SLICES).invoke();
+        return new PiForkJoinTask(0, Shared.SLICES).invoke();
     }
 
 }
