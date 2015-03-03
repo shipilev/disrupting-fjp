@@ -1,21 +1,14 @@
 package net.shipilev;
 
-import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.annotations.Benchmark;
 
-import java.util.concurrent.TimeUnit;
-
-@Warmup(iterations = 3)
-@Measurement(iterations = 10)
-@Fork(5)
-@BenchmarkMode(Mode.SingleShotTime)
-@OutputTimeUnit(TimeUnit.MILLISECONDS)
-public class SingleThread {
+public class SingleThread extends Workload {
 
     @Benchmark
     public double run() {
         double acc = 0;
-        for (int s = 0; s < Shared.SLICES; s++) {
-            acc += Shared.calculatePi(s);
+        for (int s = 0; s < getSlices(); s++) {
+            acc += doCalculatePi(s);
         }
         return acc;
     }
