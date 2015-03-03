@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
 
 @Warmup(iterations = 3)
 @Measurement(iterations = 10)
-@Fork(1)
+@Fork(5)
 @BenchmarkMode(Mode.SingleShotTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 public class SingleThread {
