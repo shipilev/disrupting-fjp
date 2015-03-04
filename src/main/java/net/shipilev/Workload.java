@@ -21,15 +21,15 @@ import java.util.concurrent.TimeUnit;
 public class Workload {
 
     @Param({"500", "1000", "5000", "10000", "50000"})
-    public int slicesK;
+    public static int slicesK;
 
     @Param({"10"})
-    public int workMult;
+    public static int workMult;
 
     @Param("0")
-    public int threads;
+    public static int threads;
 
-    int getThreads() {
+    static int getThreads() {
         if (threads == 0) {
             return Runtime.getRuntime().availableProcessors();
         } else {
@@ -37,11 +37,11 @@ public class Workload {
         }
     }
 
-    int getSlices() {
+    static int getSlices() {
         return slicesK * 1000;
     }
 
-    public double doCalculatePi(final int sliceNr) {
+    public static double doCalculatePi(final int sliceNr) {
         final int from = sliceNr * workMult;
         final int to = from + workMult;
         final int c = (to << 1) + 1;

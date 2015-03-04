@@ -10,7 +10,7 @@ public class Streams extends Workload {
     public double run() {
         return IntStream.range(0, getSlices())
                     .parallel()
-                    .mapToDouble(this::doCalculatePi)
+                    .mapToDouble(Workload::doCalculatePi)
                     .reduce(0, Double::sum);
     }
 

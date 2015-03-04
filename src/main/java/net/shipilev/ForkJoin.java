@@ -12,7 +12,7 @@ public class ForkJoin extends Workload {
       The fork-join task below is used as "just" the Callable.
      */
 
-    class PiForkJoinTask extends RecursiveTask<Double> {
+    static class PiForkJoinTask extends RecursiveTask<Double> {
         private final int from;
         private final int to;
 

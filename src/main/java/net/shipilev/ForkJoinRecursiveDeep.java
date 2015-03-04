@@ -12,7 +12,7 @@ public class ForkJoinRecursiveDeep extends Workload {
       contains a single slice.
      */
 
-    class PiForkJoinTask extends RecursiveTask<Double> {
+    static class PiForkJoinTask extends RecursiveTask<Double> {
         private final int from;
         private final int to;
 

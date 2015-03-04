@@ -12,7 +12,7 @@ public class ForkJoinRecursive extends Workload {
       with some sensible decomposition threshold.
      */
 
-    class PiForkJoinTask extends RecursiveTask<Double> {
+    static class PiForkJoinTask extends RecursiveTask<Double> {
         private final int from;
         private final int to;
 

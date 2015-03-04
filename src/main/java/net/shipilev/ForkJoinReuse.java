@@ -11,7 +11,7 @@ public class ForkJoinReuse extends Workload {
       and "reuses" the submitted tasks.
      */
 
-    class PiForkJoinTask extends RecursiveTask<Double> {
+    static class PiForkJoinTask extends RecursiveTask<Double> {
         private int slice;
 
         @Override

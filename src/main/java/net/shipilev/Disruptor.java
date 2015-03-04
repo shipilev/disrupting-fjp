@@ -21,7 +21,7 @@ public class Disruptor extends Workload {
     private RingBuffer<PiJob> ringBuffer;
     private PiResultReclaimer result;
 
-    public class PiJob {
+    public static class PiJob {
         public double result;
         public int sliceNr;
         public int partitionId;
@@ -31,7 +31,7 @@ public class Disruptor extends Workload {
         }
     }
 
-    public class PiEventFac implements EventFactory<PiJob> {
+    public static class PiEventFac implements EventFactory<PiJob> {
 
         @Override
         public PiJob newInstance() {
